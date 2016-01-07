@@ -1,0 +1,12 @@
+/* открывает текстовый файл */
+void OpenText(const char * name, text * t);
+
+/* открывает текстовый файл, не вызывает error при ошибке открытия файла
+   см. errno если возвращен не 0 (то есть -1) для подробностей.
+*/
+int SafeOpenText(const char * name, text * t);
+/* закрывает текстовый файл */
+void CloseText(text * t);
+
+/* возвращает следущую строку, без \n или NULL если случилась ошибка */
+const char * GetLine(text * t);
