@@ -121,3 +121,32 @@ void Asprintf(char ** dst, const char * format, ...) {
   if (-1 == vasprintf(dst, format, ap)) error(0);
   va_end(ap);
 }
+
+void CopyTail(const char * name, text * t,unsigned * size, unsigned * crc32) {
+  unsigned crc_table[256];
+  unsigned crc; int i, j;
+  for (i = 0; i < 256; i++)
+  {
+    crc = i;
+    for (j = 0; j < 8; j++)
+      crc = crc & 1 ? (crc >> 1) ^ 0xEDB88320UL : crc >> 1;
+    crc_table[i] = crc;
+  };
+  crc = 0xFFFFFFFFUL;
+  FILE * out = fopen(name,"w");
+  if (!out) error("Cannot open file \"%s\"",name);
+  int c;
+  *size = 0;
+  while (EOF != (c = getc(t->f))) {
+    ++*size;
+    crc = crc_table[(crc ^ c) & 0xFF] ^ (crc >> 8);
+    if (EOF == putc(c,out)) error("Cannot write file \"%s\"",name);
+  }
+  if (ferror(t->f)) {
+    if (t->name) error("Cannot read file \"%s\".",t->name);
+    else error("Cannot read from stdin");
+  }
+  if (fclose(out)) error("Cannot close file \"%s\"",name);
+  CloseText(t);
+  *crc32 = crc ^ 0xFFFFFFFFUL;
+}
